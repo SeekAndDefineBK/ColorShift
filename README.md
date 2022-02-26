@@ -18,13 +18,13 @@ Examples to come
 
 # Priorities of Issues to solve.
 1. Generalize initializer for Non-Sneaker Tracker usecases.
-1a. Allow a developer to pass in an initial color and it doesn't disable the color shift.
-1b. Create an initializer where width and height are not necessary. 
-1c. Create an initializer that defines an optional Color value that when populated, disables the color shift. This is an initializer for Sneaker Tracker. 
+- Allow a developer to pass in an initial color and it doesn't disable the color shift.
+- Create an initializer where width and height are not necessary. 
+- Create an initializer that defines an optional Color value that when populated, disables the color shift. This is an initializer for Sneaker Tracker. 
 
 2. More efficiency around changing the color and invoking the body redraw less. 
 
 3. Allow for greater customization.
-3a. Allow the developer to define the smoothness of the transition.
-3b. Allow the developer to define a select range of colors to shift between. 
-3c. Allow the developer to define the gap between color 1 and color 2.  
+- Allow the developer to define the smoothness of the transition.
+- Allow the developer to define a select range of colors to shift between. 
+- Allow the developer to define the gap between color 1 and color 2.  

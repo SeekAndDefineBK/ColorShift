@@ -9,33 +9,49 @@ import SwiftUI
 
 struct ColorShiftModifier: ViewModifier {
     let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
-    @State var color1Counter:Int = 0
-    @State var color2Counter: Int = 1
     
     let width: CGFloat?
     let height: CGFloat?
     let color: Color?
     
+    @State var color1: Color
     @State var c1Reverse: Bool = false
-    @State var c1hue: Double = Double.random(in: 0...1)
+    @State var c1hue: Double
     
+    @State var color2: Color
     @State var c2Reverse: Bool = false
-    @State var c2hue: Double = Double.random(in: 0...1)
+    @State var c2hue: Double
     
-    @State var color1 = Color.blue
-    @State var color2 = Color.cyan
+    init(width: CGFloat?, height: CGFloat?, color: Color?) {
+        self.width = width
+        self.height = height
+        self.color = color
+        
+        let c1 = Double.random(in: 0...1)
+        let c2 = Double.random(in: 0...1)
+        
+        c1hue = c1
+        c2hue = c2
+        
+        _color1 = State(wrappedValue: Color(hue: c1, saturation: 1.0, brightness: 1.0))
+        _color2 = State(wrappedValue: Color(hue: c2, saturation: 1.0, brightness: 1.0))
+    }
     
     func body(content: Content) -> some View {
 
-        return ZStack(alignment: .topTrailing) {
+        ZStack(alignment: .topTrailing) {
             if color != nil {
                 content
                     .foregroundStyle(color!)
-            }
-            
-            if color == nil {
+            } else {
                 content
-                    .foregroundStyle(LinearGradient(gradient: Gradient(colors: [color1, color2]), startPoint: .topTrailing, endPoint: .bottomLeading))
+                    .foregroundStyle(
+                        LinearGradient(
+                            gradient: Gradient(colors: [color1, color2]),
+                            startPoint: .topTrailing,
+                            endPoint: .bottomLeading
+                        )
+                    )
                     .onReceive(timer) { _ in
                         updateColors()
                     }
@@ -44,65 +60,70 @@ struct ColorShiftModifier: ViewModifier {
         .frame(width: width ?? .infinity, height: height ?? .infinity)
     }
     
+    //MARK: Color shifting methods
+    enum colorChoice {
+        case c1, c2
+    }
+    
     func updateColors() {
         withAnimation {
-            color1 = createColor(colorChoice.c1)
-            color2 = createColor(colorChoice.c2)
+            color1 = changeColor(colorChoice: .c1)
+            color2 = changeColor(colorChoice: .c2)
         }
     }
     
-    func createColor(_ colorChoice: colorChoice) -> Color {
-        
-        switch colorChoice {
-            
-        case .c1:
-            
-            //determine direction of hue
-            if c1hue >= 0.99 {
-                c1Reverse = true
-            } else if c1hue <= 0.02 {
-                c1Reverse = false
+    func changeColor(colorChoice: colorChoice) -> Color {
+        //this is needed to instruct the direction block which color to inspect
+        var initialHue: Double {
+            switch colorChoice {
+            case .c1:
+                return c1hue
+            case .c2:
+                return c2hue
             }
-            
-            //execute direction
+        }
+        
+        //determine direction of hue should shift
+        //Hue is not allowed to be higher than 0.99 or lower than 0.02.
+        //this block will tell the next block if the animation is being reversed
+        if initialHue >= 0.99 {
+            switch colorChoice {
+            case .c1:
+                c1Reverse = true
+            case .c2:
+                c2Reverse = true
+            }
+        } else if initialHue <= 0.02 {
+            switch colorChoice {
+            case .c1:
+                c1Reverse = false
+            case .c2:
+                c2Reverse = false
+            }
+        }
+        
+        //execute the change in color by changing the hue
+        switch colorChoice {
+        case .c1:
             if c1Reverse {
                 c1hue -= 0.009
             } else {
                 c1hue += 0.009
             }
-
-            return Color(hue: c1hue, saturation: 1, brightness: 1)
         case .c2:
-            
-            //determine direction of hue
-            if c2hue >= 0.99 {
-                c2Reverse = true
-            } else if c2hue <= 0.02 {
-                c2Reverse = false
-            }
-            
-            //c2 changes slower to make the gradient effect stronger
-            //execute direction
             if c2Reverse {
-                c2hue -= 0.0075
+                c2hue -= 0.009
             } else {
-                c2hue += 0.0075
+                c2hue += 0.009
             }
-
-            return Color(hue: c2hue, saturation: 1, brightness: 1)
         }
         
-    }
-    
-    enum colorChoice {
-        case c1, c2
-    }
-    
-    func displayColor() -> Color {
-        if color != nil {
-            return color!
-        } else {
-            return Color.gray
+        //return a new color by using the newly changed hue
+        switch colorChoice {
+        case .c1:
+            return Color(hue: c1hue, saturation: 1, brightness: 1)
+        case .c2:
+            return Color(hue: c2hue, saturation: 1, brightness: 1)
         }
     }
 }
